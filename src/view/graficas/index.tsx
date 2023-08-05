@@ -1,5 +1,7 @@
 interface Cultivos {
     cultivos?: Object;
+    startDate?: string;
+    endDate?: string;
 }
 function Graficas(props: Cultivos) {
 

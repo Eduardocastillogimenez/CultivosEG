@@ -4,6 +4,8 @@ import { Collapse } from 'antd';
 
 interface Cultivos {
     cultivos?: Object;
+    startDate?: string;
+    endDate?: string;
 }
 
 function Principal(props: Cultivos) {
@@ -58,11 +60,6 @@ function Principal(props: Cultivos) {
         },
         {
             key: '10',
-            label: 'Zanahoria',
-            children: <p>Al igual que las zanahorias mencionadas anteriormente, este cultivo también prefiere un clima soleado. Una temperatura óptima de alrededor de 23 grados Celsius favorece su crecimiento y desarrollo adecuados.</p>,
-        },
-        {
-            key: '11',
             label: 'Plátano',
             children: <p>Los plátanos prosperan en climas soleados y cálidos. Una temperatura óptima de alrededor de 30 grados Celsius favorece su rápido crecimiento y maduración.</p>,
         }

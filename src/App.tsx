@@ -4,7 +4,7 @@ import './App.less';
 import { firebaseConfig } from './context/firebaseConfig';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, onValue, get } from "firebase/database";
-import type { DatePickerProps } from 'antd';
+import type { TimeRangePickerProps } from 'antd';
 import { DatePicker, Spin } from 'antd';
 import dayjs from 'dayjs';
 
@@ -23,6 +23,8 @@ import {
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { Breadcrumb, Layout, Menu, theme } from 'antd';
+
+const { RangePicker } = DatePicker;
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -78,15 +80,9 @@ const cultivos = {
 function App() {
   const [data, setData] = useState({ Temperatures: 0 });
   const app = initializeApp(firebaseConfig)
-  // const firebase = useFirebaseApp();
-  // const db = getFirestore();
-  // const colRef = collection(db, "Real Time DataBase");
 
   const database = getDatabase(app);
-  // var firebaseRef = database().ref("Temperature");
-  // console.log(firebaseRef)
 
-  // getDocs(colRef).then((e) => console.log(e))
   useEffect(() => {
     let a = true;
     if (a) {
@@ -104,14 +100,6 @@ function App() {
     }
 
   }, []);
-
-  // const starCountRef = ref(database, "Temperatures");
-  // onValue(starCountRef, (snapshot) => {
-  //   const data = snapshot.val();
-  //   // console.log(data)
-  // });
-
-
 
   function getItem(
     label: React.ReactNode,
@@ -136,27 +124,28 @@ function App() {
   const onClick: MenuProps['onClick'] = (e) => {
     switch (e.key) {
       case '1':
-        setseccion('principal');
+        setSection('principal');
         break;
       case '2':
-        setseccion('analisis');
+        setSection('analisis');
         break;
       case '3':
-        setseccion('graficas');
+        setSection('graficas');
         break;
       default:
-        setseccion('principal');
+        setSection('principal');
     }
   };
 
-  const onChange: DatePickerProps['onChange'] = (date, dateString) => {
-    console.log(date, dateString);
-    setFecha(dateString);
+  const onChange: TimeRangePickerProps['onChange'] = (dates, stringDates) => {
+    setStartDate(stringDates[0])
+    setEndDate(stringDates[1]);
   };
 
   const [collapsed, setCollapsed] = useState(false);
-  const [seccion, setseccion] = useState("principal");
-  const [fecha, setFecha] = useState("2023-05-05");
+  const [section, setSection] = useState("principal");
+  const [startDate, setStartDate] = useState("2023-05-05");
+  const [endDate, setEndDate] = useState("2023-05-05");
   const {
     token: { colorBgContainer },
   } = theme.useToken();
@@ -171,14 +160,14 @@ function App() {
       </Sider>
       <Layout>
         <Header style={{ padding: 0, background: colorBgContainer, alignItems: "end" }} >
-          <DatePicker onChange={onChange} defaultValue={dayjs('2023-05-05', dateFormat)} format={dateFormat} />
+          <RangePicker onChange={onChange} format={dateFormat} />
         </Header>
         <Content style={{ margin: '0 16px' }}>
           <Breadcrumb style={{ margin: '16px 0' }}>
-            <Breadcrumb.Item>{seccion}</Breadcrumb.Item>
+            <Breadcrumb.Item>{section}</Breadcrumb.Item>
           </Breadcrumb>
-          {data.Temperatures === 0 ? <Spin /> : seccion === "principal" ? <Principal cultivos={cultivos} /> :
-            seccion === "analisis" ? <Analisis cultivos={cultivos} fecha={fecha} data={data.Temperatures === 0 ? [] : data.Temperatures} /> :
+          {data.Temperatures === 0 ? <Spin /> : section === "principal" ? <Principal cultivos={cultivos} /> :
+            section === "analisis" ? <Analisis cultivos={cultivos} startDate={startDate} endDate={endDate} data={data.Temperatures === 0 ? [] : data.Temperatures} /> :
               <Graficas cultivos={cultivos} />}
         </Content>
         <Footer style={{ textAlign: 'center' }}>Gabriel y Eduardo</Footer>
