@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import './App.less';
 import { firebaseConfig } from './context/firebaseConfig';
-import { initializeApp } from 'firebase/app'
-import { getDatabase, ref, onValue } from "firebase/database";
+import { initializeApp } from 'firebase/app';
+import { getDatabase, ref, onValue, get } from "firebase/database";
+import type { DatePickerProps } from 'antd';
+import { DatePicker, Spin } from 'antd';
+import dayjs from 'dayjs';
 
 import Principal from './view/principal';
 import Analisis from './view/analisis';
@@ -73,6 +76,7 @@ const cultivos = {
 };
 
 function App() {
+  const [data, setData] = useState({ Temperatures: 0 });
   const app = initializeApp(firebaseConfig)
   // const firebase = useFirebaseApp();
   // const db = getFirestore();
@@ -83,14 +87,31 @@ function App() {
   // console.log(firebaseRef)
 
   // getDocs(colRef).then((e) => console.log(e))
+  useEffect(() => {
+    let a = true;
+    if (a) {
+      a = false;
+      const promi = ref(getDatabase());
+      get(promi).then((snapshot) => {
+        if (snapshot.exists()) {
+          setData(snapshot.val());
+        } else {
+          console.log("No data available");
+        }
+      }).catch((error) => {
+        console.error(error);
+      });
+    }
 
-  console.log(database);
+  }, []);
 
-  const starCountRef = ref(database, "Temperatures");
-  onValue(starCountRef, (snapshot) => {
-    const data = snapshot.val();
-    console.log(data)
-  });
+  // const starCountRef = ref(database, "Temperatures");
+  // onValue(starCountRef, (snapshot) => {
+  //   const data = snapshot.val();
+  //   // console.log(data)
+  // });
+
+
 
   function getItem(
     label: React.ReactNode,
@@ -128,25 +149,37 @@ function App() {
     }
   };
 
+  const onChange: DatePickerProps['onChange'] = (date, dateString) => {
+    console.log(date, dateString);
+    setFecha(dateString);
+  };
+
   const [collapsed, setCollapsed] = useState(false);
   const [seccion, setseccion] = useState("principal");
+  const [fecha, setFecha] = useState("2023-05-05");
   const {
     token: { colorBgContainer },
   } = theme.useToken();
+  const dateFormat = 'YYYY-MM-DD';
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
         <div className="demo-logo-vertical" />
+
         <Menu onClick={onClick} theme="dark" defaultSelectedKeys={['1']} mode="inline" items={items} />
       </Sider>
       <Layout>
-        <Header style={{ padding: 0, background: colorBgContainer }} />
+        <Header style={{ padding: 0, background: colorBgContainer, alignItems: "end" }} >
+          <DatePicker onChange={onChange} defaultValue={dayjs('2023-05-05', dateFormat)} format={dateFormat} />
+        </Header>
         <Content style={{ margin: '0 16px' }}>
           <Breadcrumb style={{ margin: '16px 0' }}>
             <Breadcrumb.Item>{seccion}</Breadcrumb.Item>
           </Breadcrumb>
-          {seccion === "principal" ? <Principal cultivos={cultivos} /> : seccion === "analisis" ? <Analisis cultivos={cultivos} /> : <Graficas cultivos={cultivos} />}
+          {data.Temperatures === 0 ? <Spin /> : seccion === "principal" ? <Principal cultivos={cultivos} /> :
+            seccion === "analisis" ? <Analisis cultivos={cultivos} fecha={fecha} data={data.Temperatures === 0 ? [] : data.Temperatures} /> :
+              <Graficas cultivos={cultivos} />}
         </Content>
         <Footer style={{ textAlign: 'center' }}>Gabriel y Eduardo</Footer>
       </Layout>
