@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, ReactNode} from 'react';
 import './App.css';
 import './App.less';
 import { firebaseConfig } from './context/firebaseConfig';
@@ -12,8 +12,6 @@ import Principal from './view/principal';
 import Analisis from './view/analisis';
 import Graficas from './view/graficas';
 
-
-
 import {
   DesktopOutlined,
   FileOutlined,
@@ -23,6 +21,7 @@ import {
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { Breadcrumb, Layout, Menu, theme } from 'antd';
+import moment from "moment/moment";
 
 const { RangePicker } = DatePicker;
 
@@ -30,76 +29,83 @@ const { Header, Content, Footer, Sider } = Layout;
 
 type MenuItem = Required<MenuProps>['items'][number];
 
-const cultivos = {
-  maiz: {
-    temperaturaOptima: 20,
-    climaPreferido: "soleado",
-  },
-  frijoles: {
-    temperaturaOptima: 25,
-    climaPreferido: "lluvioso",
-  },
-  zanahorias: {
-    temperaturaOptima: 15,
-    climaPreferido: "soleado",
-  },
-  tomate: {
-    temperaturaOptima: 28,
-    climaPreferido: "soleado",
-  },
-  papa: {
-    temperaturaOptima: 17,
-    climaPreferido: "nublado",
-  },
-  calabaza: {
-    temperaturaOptima: 25,
-    climaPreferido: "caluroso",
-  },
-  cebolla: {
-    temperaturaOptima: 18,
-    climaPreferido: "nublado",
-  },
-  lechuga: {
-    temperaturaOptima: 13,
-    climaPreferido: "nublado",
-  },
-  esparragos: {
-    temperaturaOptima: 20,
-    climaPreferido: "nublado",
-  },
-  zanahoria: {
-    temperaturaOptima: 23,
-    climaPreferido: "soleado",
-  },
-  platano: {
-    temperaturaOptima: 30,
-    climaPreferido: "soleado",
-  }
-};
+export interface OptimalTemperaturesPerVegetable {
+  name: string,
+  minTemperature: number,
+  maxTemperature: number
+}
+
+export interface TemperaturesMeasuredPerDayVegetables {
+  name: string,
+  temperature: number
+  date: string
+}
+
+// export interface
 
 function App() {
   const [data, setData] = useState({ Temperatures: 0 });
   const app = initializeApp(firebaseConfig)
-
   const database = getDatabase(app);
+  const starCountRef = ref(database, "Temperatures");
 
-  useEffect(() => {
-    let a = true;
-    if (a) {
-      a = false;
-      const promi = ref(getDatabase());
-      get(promi).then((snapshot) => {
-        if (snapshot.exists()) {
-          setData(snapshot.val());
-        } else {
-          console.log("No data available");
-        }
-      }).catch((error) => {
-        console.error(error);
-      });
-    }
-
-  }, []);
+  const optimalTemperatures: OptimalTemperaturesPerVegetable[] = [
+    {
+      name: "Maíz",
+      minTemperature: 20,
+      maxTemperature: 25
+    },
+    {
+      name: "Frijo",
+      minTemperature: 23,
+      maxTemperature: 27
+    },
+    {
+      name: "Zanahoria",
+      minTemperature: 13,
+      maxTemperature: 17
+    },
+    {
+      name: "Tomate",
+      minTemperature: 26,
+      maxTemperature: 30
+    },
+    {
+      name: "Papa",
+      minTemperature: 16,
+      maxTemperature: 21
+    },
+    {
+      name: "Calabaza",
+      minTemperature: 23.5,
+      maxTemperature: 28
+    },
+    {
+      name: "Cebolla",
+      minTemperature: 16,
+      maxTemperature: 20
+    },
+    {
+      name: "Lechuga",
+      minTemperature: 11,
+      maxTemperature: 15
+    },
+    {
+      name: "Espárragos",
+      minTemperature: 18,
+      maxTemperature: 22
+    },
+    {
+      name: "Lechuga",
+      minTemperature: 11,
+      maxTemperature: 15
+    },
+    {
+      name: "Platano",
+      minTemperature: 28,
+      maxTemperature: 35
+    },
+  ];
 
   function getItem(
     label: React.ReactNode,
@@ -137,19 +143,58 @@ function App() {
     }
   };
 
+  const [collapsed, setCollapsed] = useState(false);
+  const [section, setSection] = useState("principal");
+  const [startDate, setStartDate] = useState("2023-05-05");
+  const [endDate, setEndDate] = useState("2023-05-05");
+
   const onChange: TimeRangePickerProps['onChange'] = (dates, stringDates) => {
     setStartDate(stringDates[0])
     setEndDate(stringDates[1]);
   };
 
-  const [collapsed, setCollapsed] = useState(false);
-  const [section, setSection] = useState("principal");
-  const [startDate, setStartDate] = useState("2023-05-05");
-  const [endDate, setEndDate] = useState("2023-05-05");
+  const [temperaturesMeasuredPerDayVegetables,
+    setTemperaturesMeasuredPerDayVegetables] =
+      useState([] as TemperaturesMeasuredPerDayVegetables[]);
+
+  const [temperaturesMeasuredPerDayVegetablesFirebaseData,
+    setTemperaturesMeasuredPerDayVegetablesFirebaseData] =
+      useState([] as TemperaturesMeasuredPerDayVegetables[]);
+
+  const [averageTemperature, setAverageTemperatures] = useState(0);
+  const [daysCounter, setDaysCounter] = useState(0);
   const {
     token: { colorBgContainer },
   } = theme.useToken();
   const dateFormat = 'YYYY-MM-DD';
+
+  onValue(starCountRef, (snapshot) => {
+    const data = snapshot.val();
+    if(data.length !== temperaturesMeasuredPerDayVegetablesFirebaseData.length) {
+      setTemperaturesMeasuredPerDayVegetablesFirebaseData(data)
+    }
+  });
+
+  useEffect(() => {
+    let daysCounterAux = 0
+    const temperatureSum = temperaturesMeasuredPerDayVegetablesFirebaseData.reduce((accumulator: number, currentValue: any) => {
+      if(moment(endDate).isSameOrAfter(currentValue.date) && moment(startDate).isSameOrBefore(currentValue.date)) {
+        daysCounterAux++;
+        return accumulator + currentValue.temperature
+      }
+      return accumulator
+    },0);
+
+    setDaysCounter(daysCounterAux);
+    let averageTemperaturesAux = Number((temperatureSum / daysCounterAux).toFixed(2))
+    setAverageTemperatures(averageTemperaturesAux)
+
+    setTemperaturesMeasuredPerDayVegetables(temperaturesMeasuredPerDayVegetablesFirebaseData.filter(measurement => {
+      if(moment(endDate).isSameOrAfter(measurement.date) && moment(startDate).isSameOrBefore(measurement.date)) {
+        return true;
+      }
+    }))
+  }, [ endDate ])
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -166,9 +211,19 @@ function App() {
           <Breadcrumb style={{ margin: '16px 0' }}>
             <Breadcrumb.Item>{section}</Breadcrumb.Item>
           </Breadcrumb>
-          {data.Temperatures === 0 ? <Spin /> : section === "principal" ? <Principal cultivos={cultivos} /> :
-            section === "analisis" ? <Analisis cultivos={cultivos} startDate={startDate} endDate={endDate} data={data.Temperatures === 0 ? [] : data.Temperatures} /> :
-              <Graficas cultivos={cultivos} />}
+          {temperaturesMeasuredPerDayVegetables.length === 0 ? <Spin /> : section === "principal" ? <Principal /> :
+            section === "analisis" ? <Analisis
+                    startDate={startDate}
+                    endDate={endDate}
+                    daysCounter={daysCounter}
+                    optimalTemperatures={optimalTemperatures}
+                    averageTemperature={averageTemperature} /> :
+              <Graficas
+                  temperaturesMeasuredPerDayVegetables={temperaturesMeasuredPerDayVegetables}
+                  startDate={startDate}
+                  endDate={endDate}
+              />
+          }
         </Content>
         <Footer style={{ textAlign: 'center' }}>Gabriel y Eduardo</Footer>
       </Layout>
