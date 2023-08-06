@@ -14,7 +14,7 @@ function Principal(props: Cultivos) {
         {
             key: '1',
             label: 'Maíz',
-            children: <p>El maíz prospera mejor en un clima soleado, con una temperatura óptima alrededor de 20 grados Celsius.
+            children: <p>El maíz prospera mejor en un clima soleado, con una temperatura óptima alrededor de 22 grados Celsius.
                 Bajo estas condiciones, el maíz crece de manera saludable y alcanza su madurez adecuada para la cosecha.</p>,
         },
         {

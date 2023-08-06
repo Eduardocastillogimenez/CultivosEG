@@ -200,7 +200,6 @@ function App() {
     <Layout style={{ minHeight: '100vh' }}>
       <Sider collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
         <div className="demo-logo-vertical" />
-
         <Menu onClick={onClick} theme="dark" defaultSelectedKeys={['1']} mode="inline" items={items} />
       </Sider>
       <Layout>
@@ -208,11 +207,14 @@ function App() {
           <RangePicker onChange={onChange} format={dateFormat} />
         </Header>
         <Content style={{ margin: '0 16px' }}>
-          <Breadcrumb style={{ margin: '16px 0' }}>
-            <Breadcrumb.Item>{section}</Breadcrumb.Item>
+          <Breadcrumb style={{ margin: '16px 0', fontSize: "35px", fontWeight: "semi-bold", borderBottom: "1px solid #DDE6ED"}}>
+            <Breadcrumb.Item>{ section.charAt(0).toUpperCase() + section.slice(1) }</Breadcrumb.Item>
           </Breadcrumb>
-          {temperaturesMeasuredPerDayVegetables.length === 0 ? <Spin /> : section === "principal" ? <Principal /> :
+          {temperaturesMeasuredPerDayVegetables.length === 0 ?
+              <h2 style={{margin: "50px 0 0 0", fontWeight: "500", textAlign: "center"}}>Selecciona un rango de fechas</h2>:
+              section === "principal" ? <Principal /> :
             section === "analisis" ? <Analisis
+                    temperaturesMeasuredPerDayVegetables={temperaturesMeasuredPerDayVegetables}
                     startDate={startDate}
                     endDate={endDate}
                     daysCounter={daysCounter}
