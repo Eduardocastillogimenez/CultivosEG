@@ -103,7 +103,7 @@ function Graficas(props: Cultivos) {
             <h3>Temperatura VS Días</h3>
             <Chart options={temperaturesChartData.options} series={temperaturesChartData.series} type="line" width={1100} height={320} />
             <section style={{marginTop: "1rem", marginBottom: "1rem", height: "2px"}}></section>
-            <h3>Cantidad De Días Lluviosos, Solreados y Nublados</h3>
+            <h3>Cantidad De Días Lluviosos, Soleados y Nublados</h3>
             <Chart options={weatherChartData.options} series={weatherChartData.series} type="bar" width={1100} height={320} />
         </div>
     );
